@@ -69,6 +69,26 @@ app.get("/api/vehicles", authMiddleware, async (req, res) => {
   }
 });
 
+app.post("/api/vehicles", authMiddleware, async (req, res) => {
+  try {
+    const { make, model, category, price, quantity } = req.body;
+
+    if (!make || !model || !category || price === undefined || quantity === undefined) {
+      return res.status(400).json({ message: "All vehicle fields are required" });
+    }
+
+    const db = await getDb();
+    const result = await db.run(
+      "INSERT INTO vehicles (make, model, category, price, quantity) VALUES (?, ?, ?, ?, ?)",
+      [make, model, category, price, quantity]
+    );
+
+    res.status(201).json({ id: result.lastID, make, model, category, price, quantity });
+  } catch (err) {
+    res.status(500).json({ message: "Error adding vehicle", error: err.message });
+  }
+});
+
 const PORT = 3000;
 
 if (require.main === module) {
