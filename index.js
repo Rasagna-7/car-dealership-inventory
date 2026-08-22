@@ -125,6 +125,33 @@ app.post("/api/vehicles", authMiddleware, async (req, res) => {
   }
 });
 
+app.put("/api/vehicles/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = await getDb();
+
+    const existing = await db.get("SELECT * FROM vehicles WHERE id = ?", [id]);
+    if (!existing) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+
+    const make = req.body.make !== undefined ? req.body.make : existing.make;
+    const model = req.body.model !== undefined ? req.body.model : existing.model;
+    const category = req.body.category !== undefined ? req.body.category : existing.category;
+    const price = req.body.price !== undefined ? req.body.price : existing.price;
+    const quantity = req.body.quantity !== undefined ? req.body.quantity : existing.quantity;
+
+    await db.run(
+      "UPDATE vehicles SET make = ?, model = ?, category = ?, price = ?, quantity = ? WHERE id = ?",
+      [make, model, category, price, quantity, id]
+    );
+
+    res.status(200).json({ id: Number(id), make, model, category, price, quantity });
+  } catch (err) {
+    res.status(500).json({ message: "Error updating vehicle", error: err.message });
+  }
+});
+
 const PORT = 3000;
 
 if (require.main === module) {
