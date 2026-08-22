@@ -5,8 +5,10 @@ let db;
 
 async function getDb() {
   if (!db) {
+    const filename = process.env.NODE_ENV === "test" ? ":memory:" : "./dealership.db";
+
     db = await open({
-      filename: "./dealership.db",
+      filename,
       driver: sqlite3.Database,
     });
 
@@ -16,6 +18,17 @@ async function getDb() {
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         role TEXT DEFAULT "user"
+      )
+    `);
+
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS vehicles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        make TEXT NOT NULL,
+        model TEXT NOT NULL,
+        category TEXT NOT NULL,
+        price REAL NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 0
       )
     `);
   }
