@@ -3,7 +3,7 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { getDb } = require("./database");
-const { authMiddleware } = require("./middleware");
+const { authMiddleware, adminOnly } = require("./middleware");
 
 const app = express();
 app.use(cors());
@@ -152,6 +152,65 @@ app.put("/api/vehicles/:id", authMiddleware, async (req, res) => {
   }
 });
 
+app.delete("/api/vehicles/:id", authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = await getDb();
+
+    const existing = await db.get("SELECT * FROM vehicles WHERE id = ?", [id]);
+    if (!existing) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+
+    await db.run("DELETE FROM vehicles WHERE id = ?", [id]);
+    res.status(200).json({ message: "Vehicle deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Error deleting vehicle", error: err.message });
+  }
+});
+
+app.post("/api/vehicles/:id/purchase", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = await getDb();
+    const vehicle = await db.get("SELECT * FROM vehicles WHERE id = ?", [id]);
+
+    if (!vehicle) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+    if (vehicle.quantity <= 0) {
+      return res.status(400).json({ message: "Vehicle out of stock" });
+    }
+
+    const newQuantity = vehicle.quantity - 1;
+    await db.run("UPDATE vehicles SET quantity = ? WHERE id = ?", [newQuantity, id]);
+
+    res.status(200).json({ ...vehicle, quantity: newQuantity });
+  } catch (err) {
+    res.status(500).json({ message: "Error purchasing vehicle", error: err.message });
+  }
+});
+
+app.post("/api/vehicles/:id/restock", authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount } = req.body;
+    const db = await getDb();
+    const vehicle = await db.get("SELECT * FROM vehicles WHERE id = ?", [id]);
+
+    if (!vehicle) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+
+    const newQuantity = vehicle.quantity + (amount || 1);
+    await db.run("UPDATE vehicles SET quantity = ? WHERE id = ?", [newQuantity, id]);
+
+    res.status(200).json({ ...vehicle, quantity: newQuantity });
+  } catch (err) {
+    res.status(500).json({ message: "Error restocking vehicle", error: err.message });
+  }
+});
+
 const PORT = 3000;
 
 if (require.main === module) {
@@ -161,3 +220,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+
