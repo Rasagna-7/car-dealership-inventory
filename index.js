@@ -59,6 +59,42 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+app.get("/api/vehicles/search", authMiddleware, async (req, res) => {
+  try {
+    const { make, model, category, minPrice, maxPrice } = req.query;
+    const db = await getDb();
+
+    let query = "SELECT * FROM vehicles WHERE 1=1";
+    const params = [];
+
+    if (make) {
+      query += " AND make LIKE ?";
+      params.push(`%${make}%`);
+    }
+    if (model) {
+      query += " AND model LIKE ?";
+      params.push(`%${model}%`);
+    }
+    if (category) {
+      query += " AND category LIKE ?";
+      params.push(`%${category}%`);
+    }
+    if (minPrice) {
+      query += " AND price >= ?";
+      params.push(minPrice);
+    }
+    if (maxPrice) {
+      query += " AND price <= ?";
+      params.push(maxPrice);
+    }
+
+    const vehicles = await db.all(query, params);
+    res.status(200).json(vehicles);
+  } catch (err) {
+    res.status(500).json({ message: "Error searching vehicles", error: err.message });
+  }
+});
+
 app.get("/api/vehicles", authMiddleware, async (req, res) => {
   try {
     const db = await getDb();
