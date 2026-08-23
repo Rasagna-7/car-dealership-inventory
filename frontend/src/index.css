@@ -1,1 +1,39 @@
 @import "tailwindcss";
+
+@keyframes drive {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(100vw + 300px)); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes roadLines {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes scaleIn {
+  0% { transform: scale(0.7); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes confetti {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0); opacity: 0; }
+}
+
+.animate-drive-fast { animation: drive 5s linear infinite; }
+.animate-drive-medium { animation: drive 8s linear infinite; animation-delay: 1s; }
+.animate-drive-slow { animation: drive 11s linear infinite; animation-delay: 2s; }
+.wheel-spin { animation: spin 0.6s linear infinite; }
+.animate-road-lines { animation: roadLines 1.5s linear infinite; }
+.animate-scale-in { animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-confetti { animation: confetti 0.9s ease-out forwards; }
+
+body {
+  font-family: "Outfit", sans-serif;
+}
