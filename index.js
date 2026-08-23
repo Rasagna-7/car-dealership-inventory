@@ -211,7 +211,7 @@ app.post("/api/vehicles/:id/restock", authMiddleware, adminOnly, async (req, res
   }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 if (require.main === module) {
   app.listen(PORT, () => {
